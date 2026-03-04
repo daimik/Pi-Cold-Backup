@@ -1,0 +1,114 @@
+========================================================
+  ESP32 Cold Backup Controller - Flash Instructions
+  Board: WT32-ETH01
+========================================================
+
+REQUIREMENTS
+------------
+1. Python installed (https://python.org)
+2. PlatformIO CLI:
+       pip install platformio
+3. USB-to-TTL adapter connected to ESP32:
+       TTL TX  -> ESP32 RX (GPIO3)
+       TTL RX  -> ESP32 TX (GPIO1)
+       TTL GND -> ESP32 GND
+       TTL 3V3 -> ESP32 3V3
+
+
+HOW TO ENTER DOWNLOAD MODE
+---------------------------
+   Hold IO0 -> press EN (reset) -> release IO0
+   (The script will prompt you when needed)
+
+
+FIRST-TIME INSTALLATION (full flash)
+--------------------------------------
+Open PowerShell in the esp32-controller folder, then:
+
+   Step 1 - Allow scripts (one-time):
+       Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+
+   Step 2 - Build firmware + LittleFS:
+       .\flash_esp.ps1 -BuildOnly
+
+   Step 3 - Flash firmware only:
+       .\flash_esp.ps1 -FirmwareOnly -Port COM10
+
+   Step 4 - Flash web dashboard (LittleFS):
+       .\flash_esp.ps1 -FilesystemOnly -Port COM10
+
+   (Replace COM10 with your actual port - check Device Manager)
+
+
+ALL FLASH OPTIONS
+-----------------
+   # Build only (no flash):
+   .\flash_esp.ps1 -BuildOnly
+
+   # Flash firmware only (uses pre-built binary):
+   .\flash_esp.ps1 -FirmwareOnly -Port COM10
+
+   # Flash web dashboard only (uses pre-built binary):
+   .\flash_esp.ps1 -FilesystemOnly -Port COM10
+
+   # Flash both firmware + web dashboard (uses pre-built binaries):
+   .\flash_esp.ps1 -FlashOnly -Port COM10
+
+   # Build + flash everything (firmware + web dashboard):
+   .\flash_esp.ps1 -Port COM10
+
+   # Open serial monitor after flash:
+   .\flash_esp.ps1 -FirmwareOnly -Port COM10 -Monitor
+
+
+SERIAL MONITOR (view ESP32 output)
+------------------------------------
+   pio device monitor --port COM10 --baud 115200
+
+   After boot you should see:
+       [ETH] IP: 192.168.1.xxx, Speed: 100Mbps, Full Duplex
+       [MAIN] Ethernet OK: 192.168.1.xxx
+       [WEB] Server started on port 80
+
+
+FIND YOUR COM PORT
+------------------
+   Device Manager -> Ports (COM & LPT)
+   Look for: USB Serial, CH340, CP210x, or FTDI
+
+
+LINUX / MAC (bash alternative)
+-------------------------------
+A bash script (flash_esp.sh) is available for Linux and macOS:
+
+   # Build + flash everything:
+   ./flash_esp.sh
+
+   # Build only (no flash):
+   ./flash_esp.sh --build-only
+
+   # Flash existing binaries only:
+   ./flash_esp.sh --flash-only
+
+   # Custom serial port:
+   ./flash_esp.sh --port=/dev/ttyUSB1
+
+   # Open serial monitor after flash:
+   ./flash_esp.sh --monitor
+
+You can also build on a PC and flash from a Raspberry Pi:
+
+   # On PC:
+   ./flash_esp.sh --build-only
+
+   # Copy binaries to Pi:
+   scp -r .pio/build/wt32-eth01/ pi@<pi-ip>:~/esp32-build/
+
+   # On Pi:
+   cd ~/cold-backup-docker/esp32-controller
+   cp -r ~/esp32-build/wt32-eth01/ .pio/build/
+   ./flash_esp.sh --flash-only
+
+Note: Building on Pi 3 (32-bit ARM) may fail because PlatformIO
+ESP32 toolchain requires 64-bit. Use the build-on-PC approach instead.
+Pi 4 and 5 (64-bit) can build directly.
