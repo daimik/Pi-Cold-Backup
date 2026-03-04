@@ -6,24 +6,26 @@
 
 Ransomware can encrypt every connected drive and network share. A backup that's physically powered off can't be reached. This system keeps your backup Pi offline except during scheduled backup windows, providing an air-gapped layer of protection for your data.
 
+> **Why not Wake-on-LAN?** My Raspberry Pi doesn't support WOL. A physical relay is the simplest way to power-cycle it remotely.
+
 ## Architecture
 
 ```
-WT32-ETH01 (ESP32)                          Raspberry Pi 3B+
-┌──────────────────────────┐                ┌─────────────────────────────┐
-│  Relay Controller        │  GPIO relay    │  Backup API Service         │
-│  + Web Dashboard         │ ──power on───▶ │  (Flask, systemd)           │
-│  + Interval Scheduler    │                │                             │
-│                          │  1. Health poll │  GET /api/health            │
-│                          │ ──────────────▶│                             │
-│                          │  2. Trigger     │  POST /api/backup/start     │
-│                          │ ──────────────▶│  → Mount SMB, rsync,        │
-│                          │  3. Poll status │    retention, Gotify notify │
-│                          │ ──────────────▶│                             │
-│                          │  4. Shutdown    │  POST /api/shutdown         │
-│                          │ ──────────────▶│                             │
-│  5. Cut relay power      │ ──power off──▶ │  (off)                      │
-└──────────────────────────┘                └─────────────────────────────┘
+ESP32 (WT32-ETH01)                       Raspberry Pi 3B+
+┌────────────────────────┐                ┌──────────────────────────────┐
+│  Relay Controller      │  GPIO relay    │  Backup API Service          │
+│  + Web Dashboard       │ ──power on───> │  (Flask, systemd)            │
+│  + Interval Scheduler  │                │                              │
+│                        │ 1. Health poll │  GET /api/health             │
+│                        │ ─────────────> │                              │
+│                        │ 2. Trigger     │  POST /api/backup/start      │
+│                        │ ─────────────> │    mount SMB, rsync,         │
+│                        │ 3. Poll status │    retention, Gotify notify  │
+│                        │ ─────────────> │                              │
+│                        │ 4. Shutdown    │  POST /api/shutdown          │
+│                        │ ─────────────> │                              │
+│  5. Cut relay power    │ ──power off──> │  (off)                       │
+└────────────────────────┘                └──────────────────────────────┘
 ```
 
 ## Features
@@ -76,8 +78,12 @@ cd pi-backup-service
 nano config.yaml
 
 # Install (creates user, venv, sudoers, systemd service)
-chmod +x install.sh
-sudo ./install.sh
+sudo bash install.sh
+
+# Enable and start the service
+sudo systemctl enable cold-backup-api
+sudo systemctl start cold-backup-api
+sudo systemctl status cold-backup-api
 
 # Verify
 curl http://localhost:5000/api/health
@@ -157,7 +163,7 @@ After flashing, the ESP32 gets an IP via DHCP over Ethernet:
 
 - **Serial monitor:** `pio device monitor --baud 115200`
 - **Router:** Check DHCP leases for hostname `cold-backup-esp32`
-- **Network scan:** `nmap -sn 10.10.1.0/24 | grep -B2 "Espressif"`
+- **Network scan:** `nmap -sn 192.168.1.0/24 | grep -B2 "Espressif"`
 
 ### 3. Configure via Web Dashboard
 
@@ -166,7 +172,7 @@ Open `http://<esp32-ip>/` in a browser:
 | Setting | Default | Description |
 |---------|---------|-------------|
 | Relay GPIO pin | 4 | GPIO connected to relay IN |
-| Pi IP | 10.10.1.11 | Raspberry Pi IP address |
+| Pi IP | 192.168.1.11 | Raspberry Pi IP address |
 | Pi Port | 5000 | Flask API port |
 | Schedule interval | 43200 min (30 days) | Time between backup runs |
 
