@@ -1,0 +1,17 @@
+[Unit]
+Description=Cold Backup API Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=coldbackup
+Group=coldbackup
+WorkingDirectory=/opt/cold-backup
+ExecStart=/opt/cold-backup/venv/bin/python -m flask --app src.app:create_app run --host 0.0.0.0 --port 5000
+Restart=always
+RestartSec=5
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

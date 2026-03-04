@@ -1,0 +1,52 @@
+# Cold Backup API Service Configuration
+
+# --- API Server ---
+api:
+  host: "0.0.0.0"
+  port: 5000
+
+# --- SMB Source (NAS/File Server) ---
+smb:
+  ip: "192.168.1.100"
+  share: "backups"
+  user: "changeme"
+  pass: "changeme"
+  mount_point: "/mnt/smb-backup"
+  mount_options: "vers=3.0,seal,uid=0,gid=0,file_mode=0600,dir_mode=0700,iocharset=utf8"
+
+# --- Backup Settings ---
+backup:
+  sources:
+    - "Documents"
+    - "Photos"
+    - "Projects"
+    - "Configs"
+  dest: "/backup/cold-storage"
+  excludes:
+    - "*.tmp"
+    - "*.temp"
+    - ".Thumbs.db"
+    - ".DS_Store"
+    - "@eaDir/"
+    - "#recycle/"
+  rsync_options: "-avh --stats --delete --partial --timeout=600"
+
+# --- Retention ---
+# Monthly snapshots with hardlink dedup. Set keep: 0 for mirror mode.
+retention:
+  keep: 6
+  dir: "/backup/snapshots"
+
+# --- Gotify Notifications ---
+gotify:
+  url: "https://gotify.example.com"
+  token: "your-gotify-app-token"
+
+# --- Post-Backup ---
+# shutdown | none
+post_action: "shutdown"
+
+# --- Logging ---
+logging:
+  level: "INFO"
+  file: "/var/log/cold-backup/backup.log"
