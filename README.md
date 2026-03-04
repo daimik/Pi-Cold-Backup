@@ -2,7 +2,9 @@
 
 **Automated cold backup solution using an ESP32 to physically power-cycle a Raspberry Pi on a schedule.** The Pi wakes up, mounts an SMB/CIFS share from your NAS, runs rsync with snapshot retention, sends a Gotify notification, and shuts down. The ESP32 then cuts power — keeping the backup drive completely offline between runs.
 
-<img width="609" height="655" alt="image" src="https://github.com/user-attachments/assets/63de9fe3-75c1-40d4-b6c2-b1c4aa2416e2" />
+<img width="605" height="691" alt="image" src="https://github.com/user-attachments/assets/0096a08f-1c74-488e-9692-50eafc0b750c" />
+
+<img width="741" height="472" alt="image" src="https://github.com/user-attachments/assets/d9b333ee-1509-479d-9665-4184a7a6b81a" />
 
 
 ## Why Cold Backups?
